@@ -94,11 +94,16 @@ class MLP_model:
         n_sample = inputs.shape[0] #输入样本数
         iter_num = n_sample // self.batch_size #训练一轮所需迭代次数
         if n_sample % self.batch_size: iter_num += 1
-
         for epoch_index in range(self.max_epoch):
             for iter_index in range(iter_num):
-                input_batch = inputs[iter_index * self.batch_size: min((iter_index + 1) * self.batch_size, n_sample)] #输入样本batch
-                y_batch = y[iter_index * self.batch_size: min((iter_index + 1) * self.batch_size, n_sample)]#label batch
+                sample_index_array = []
+                for i in range(self.batch_size):
+                    sample_index = np.random.randint((n_sample))
+                    sample_index_array.append(sample_index)
+                input_batch = inputs[sample_index_array]
+                y_batch = y[sample_index_array]
+                # input_batch = inputs[sample_index * self.batch_size: min((sample_index + 1) * self.batch_size, n_sample)] #输入样本batch
+                # y_batch = y[sample_index * self.batch_size: min((sample_index + 1) * self.batch_size, n_sample)]#label batch
                 yhat_batch = self.forward(input_batch)#前向传播
                 self.backward(yhat_batch, y_batch)#反向传播
 
@@ -106,6 +111,8 @@ class MLP_model:
                     #调整参数
                     self.weights[i] -= self.learning_rate * self.delta_w[self.layer_num-2-i]
                     self.bias[i] -= self.learning_rate * self.delta_b[self.layer_num-2-i]
+            if epoch_index < 10:
+                self.learning_rate -= 0.0001 * self.learning_rate
             #计算损失与准确度
             y_hat = self.forward(inputs)
             loss = cross_entropy_loss(y_hat, y)
